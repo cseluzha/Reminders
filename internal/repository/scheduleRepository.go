@@ -3,8 +3,10 @@ package repository
 import (
 	"database/sql"
 	"fmt"
-	"github.com/lib/pq"
 	models "reminders/internal/models"
+	"time"
+
+	"github.com/lib/pq"
 )
 
 type scheduleRepository struct {
@@ -23,11 +25,10 @@ func (ur *scheduleRepository) NewSchedule(schedule models.Schedule) string {
 	// close database
 	defer ur.db.Close()
 
-	insertStmt := `INSERT INTO ` + schemaSchedule + `.` + tableSchedule + ` (id, description, users) VALUES ($1, $2, $3) RETURNING id`
+	insertStmt := `INSERT INTO ` + schemaSchedule + `.` + tableSchedule + ` (id, description, users, date) VALUES ($1, $2, $3, $4) RETURNING id`
 	var id string
-
 	// Scan function will save the insert id in the id
-	err := ur.db.QueryRow(insertStmt, schedule.Id, schedule.Description, pq.Array(schedule.Users)).Scan(&id)
+	err := ur.db.QueryRow(insertStmt, schedule.Id, schedule.Description, pq.Array(schedule.Users), time.Now()).Scan(&id)
 	CheckError(err)
 	fmt.Printf("Inserted %v in %v\n", id, tableSchedule)
 	return id

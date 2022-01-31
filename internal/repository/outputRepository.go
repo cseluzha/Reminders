@@ -24,11 +24,11 @@ func (ur *outputRepository) NewOutput(output models.Output) string {
 	// close database
 	defer ur.db.Close()
 
-	insertStmt := `INSERT INTO ` + schemaOutput + `.` + tableOutput + ` (id, description,emails) VALUES ($2, $3, $4) RETURNING id`
+	insertStmt := `INSERT INTO ` + schemaOutput + `.` + tableOutput + ` (id, description, emails) VALUES ($1, $2, $3) RETURNING id`
 	var id string
 
 	// Scan function will save the insert id in the id
-	err := ur.db.QueryRow(insertStmt, tableOutput, output.Id, output.Description, pq.Array(output.Emails)).Scan(&id)
+	err := ur.db.QueryRow(insertStmt, GenerateUUID(), output.Description, pq.Array(output.Emails)).Scan(&id)
 	CheckError(err)
 	fmt.Printf("Inserted %v  in %v\n", id, tableOutput)
 	return id

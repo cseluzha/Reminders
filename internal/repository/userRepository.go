@@ -19,7 +19,7 @@ type UsersRepository interface {
 	DeleteUser(userId string) int64
 	ListUsers() ([]models.User, error)
 	ExistUsers(userIds []uuid.UUID) bool
-	GetEmails(userIds []uuid.UUID) []uuid.UUID
+	GetEmails(userIds []uuid.UUID) []string
 }
 
 func (ur *userRepository) NewUser(user models.User) string {
@@ -106,21 +106,20 @@ func (ur *userRepository) ExistUsers(userIds []uuid.UUID) bool {
 	var result bool = false
 	// close database
 	defer ur.db.Close()
-	queryStmt := `SELECT EXISTS(SELECT 1 FROM ` + schemaUser + `.` + tableUser + ` WHERE user_id::text in ($1) HAVING COUNT (user_id) > $2);`
+	queryStmt := `SELECT EXISTS(SELECT 1 FROM ` + schemaUser + `.` + tableUser + ` WHERE user_id::text = ANY ($1) HAVING COUNT (user_id) = $2);`	
 	res, err := ur.db.Query(queryStmt, pq.Array(userIds), len(userIds))
 	CheckError(err)
-	res.Scan(&result)
+	res.Scan(&result)	
 	return result
 }
 
-func (ur *userRepository) GetEmails(userIds []uuid.UUID) []uuid.UUID {
+func (ur *userRepository) GetEmails(userIds []uuid.UUID) []string {
 	// close database
 	defer ur.db.Close()
 
-	var emails []uuid.UUID
+	var emails []string
 	// create the select sql query
-	sqlStatement := `SELECT email FROM ` + schemaUser + `.` + tableUser + ` WHERE  user_id::text in ($1)`
-	fmt.Printf("sqlStatement %v \n", sqlStatement)
+	sqlStatement := `SELECT email FROM ` + schemaUser + `.` + tableUser + ` WHERE  user_id::text = ANY ($1)`
 	// execute the sql statement
 	rows, err := ur.db.Query(sqlStatement, pq.Array(userIds))
 	CheckError(err)
@@ -129,7 +128,7 @@ func (ur *userRepository) GetEmails(userIds []uuid.UUID) []uuid.UUID {
 
 	// iterate over the rows
 	for rows.Next() {
-		var email uuid.UUID
+		var email string
 
 		// unmarshal the row object to user
 		err = rows.Scan(&email)
