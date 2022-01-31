@@ -42,8 +42,7 @@ func proccessWithDate(dt time.Time, output models.Output) {
 
 func writeToOutput(ch chan models.Output) {
 	or := repository.NewOutputRepository()
-	var out models.Output = <-ch
-	fmt.Printf("Output %v \n", out)
+	var out models.Output = <-ch	
 	if len(out.Emails) > 0 {
 		outputId := or.NewOutput(out)
 		if len(outputId) > 0 {
